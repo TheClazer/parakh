@@ -23,12 +23,12 @@ compute:
   os: "Windows 11"
   uses_gpu_for_inference: false       # ranking step is CPU-only
   has_network_during_ranking: false   # ranking step is offline
-  pre_computation_required: true      # embeddings + LLM teacher labels (offline)
-  pre_computation_time_minutes: 0     # TODO fill after precompute lands
+  pre_computation_required: true      # LLM teacher labels (offline)
+  pre_computation_time_minutes: 8     # ~6 min teacher (3000) + ~2 min second judge
 
 ai_tools_used:
   - "Claude"        # architecture, code, data audit (Claude Code / Opus)
-  # add "Nebius" hosted models used as an offline teacher once wired
+  - "Nebius"        # Qwen3-235B (teacher) + DeepSeek-V4 (2nd judge), OFFLINE only
 
 ai_usage_summary: |
   Claude (Opus via Claude Code) used for the data audit, architecture, and code.
@@ -51,4 +51,4 @@ declarations:
   code_is_original_work: true
   no_collusion: true
   honeypot_check_done: true
-  reproduction_tested: false   # TODO set true after local CPU timing check
+  reproduction_tested: true    # rank.py runs offline on CPU in ~3 min; validator passes
