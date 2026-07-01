@@ -2,12 +2,19 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+# secrets — never commit
+.env
+*.key
 # large data — not committed
 dataset/
 candidates.jsonl
 *.jsonl
-# build artifacts / outputs
-artifacts/
+!artifacts/teacher_labels.jsonl
+# large binaries (embeddings/model weights) — shipped via script/HF, not git
+*.npy
+*.npz
+*.safetensors
+artifacts/embeddings*
 *.xlsx
 submission*.csv
 !sample_submission.csv

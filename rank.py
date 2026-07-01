@@ -31,10 +31,16 @@ REF_DATE = datetime.date(2026, 6, 30)
 TOP_N = 100
 
 
-def load_and_score(path: str):
+def load_and_score(path, labels=None):
+    """Score every candidate. When an offline teacher label exists, the teacher
+    tier (0-5) is the dominant signal and the rule score orders within a tier:
+        blended = (tier + min(rule, 0.999)) / 6      -> in [0, 1]
+    Unlabeled candidates (e.g. a fresh sandbox sample) fall back to the rule
+    score alone, mapped into the tier-0 band so they never outrank a graded fit.
+    """
+    labels = labels or {}
     recs = []
-    n = 0
-    honeypots = stuffers = 0
+    n = honeypots = stuffers = teacher_used = 0
     t0 = time.time()
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
@@ -47,16 +53,24 @@ def load_and_score(path: str):
                 continue
             n += 1
             rec = features.extract(cand, REF_DATE)
-            rec["score"] = score.score(rec)
-            if rec["honeypot"]:
-                honeypots += 1
-            if rec["stuffer"]:
-                stuffers += 1
-            # keep memory lean: only retain plausible candidates + a margin
+            rule = score.score(rec)
+            rec["rule_score"] = rule
+            lab = labels.get(rec["candidate_id"])
+            if lab and lab.get("tier") is not None and not rec["honeypot"]:
+                rec["tier"] = lab["tier"]
+                rec["teacher_reason"] = (lab.get("reason") or "").strip()
+                rec["score"] = (lab["tier"] + min(rule, 0.999)) / 6.0
+                teacher_used += 1
+            else:
+                rec["tier"] = None
+                rec["teacher_reason"] = None
+                rec["score"] = min(rule, 0.999) / 6.0
+            honeypots += rec["honeypot"]
+            stuffers += rec["stuffer"]
             recs.append(rec)
     dt = time.time() - t0
-    print(f"[parakh] scored {n} candidates in {dt:.1f}s "
-          f"({honeypots} honeypots, {stuffers} stuffers flagged)", file=sys.stderr)
+    print(f"[parakh] scored {n} in {dt:.1f}s ({honeypots} honeypots, "
+          f"{stuffers} stuffers, {teacher_used} teacher-graded)", file=sys.stderr)
     return recs
 
 
@@ -75,7 +89,8 @@ def write_csv(top, out_path):
         w = csv.writer(f)
         w.writerow(["candidate_id", "rank", "score", "reasoning"])
         for i, r in enumerate(top, start=1):
-            w.writerow([r["candidate_id"], i, f"{r['score']:.6f}", score.reason(r)])
+            reasoning = r.get("teacher_reason") or score.reason(r)
+            w.writerow([r["candidate_id"], i, f"{r['score']:.6f}", reasoning])
     print(f"[parakh] wrote {out_path}", file=sys.stderr)
 
 
@@ -90,7 +105,8 @@ def write_xlsx(top, out_path):
     ws.title = "ranking"
     ws.append(["candidate_id", "rank", "score", "reasoning"])
     for i, r in enumerate(top, start=1):
-        ws.append([r["candidate_id"], i, round(r["score"], 6), score.reason(r)])
+        reasoning = r.get("teacher_reason") or score.reason(r)
+        ws.append([r["candidate_id"], i, round(r["score"], 6), reasoning])
     wb.save(out_path)
     print(f"[parakh] wrote {out_path}", file=sys.stderr)
 
@@ -101,18 +117,33 @@ def main():
                     help="path to candidates.jsonl")
     ap.add_argument("--out", default="submission.csv", help="output CSV path")
     ap.add_argument("--xlsx", default=None, help="optional XLSX output path")
+    ap.add_argument("--labels", default="artifacts/teacher_labels.jsonl",
+                    help="offline teacher labels (skipped if missing)")
     args = ap.parse_args()
 
     if not Path(args.candidates).exists():
         sys.exit(f"[parakh] candidates file not found: {args.candidates}")
 
-    recs = load_and_score(args.candidates)
+    labels = {}
+    if args.labels and Path(args.labels).exists():
+        for line in open(args.labels, encoding="utf-8"):
+            try:
+                d = json.loads(line)
+                labels[d["candidate_id"]] = d
+            except (json.JSONDecodeError, KeyError):
+                pass
+        print(f"[parakh] loaded {len(labels)} teacher labels from {args.labels}",
+              file=sys.stderr)
+
+    recs = load_and_score(args.candidates, labels)
     top = rank(recs)
 
     # quick top-10 preview for a human sanity check
     print("[parakh] top 10 preview:", file=sys.stderr)
     for i, r in enumerate(top[:10], start=1):
-        print(f"  {i:2d}. {r['candidate_id']} {r['score']:.4f} "
+        tier = r.get("tier")
+        tier_s = f"T{tier}" if tier is not None else "T-"
+        print(f"  {i:2d}. {r['candidate_id']} {r['score']:.4f} {tier_s} "
               f"{r['current_title']} ({r['years']}y) {r['location']}", file=sys.stderr)
 
     write_csv(top, args.out)

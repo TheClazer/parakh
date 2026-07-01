@@ -165,3 +165,27 @@ def extract(cand: dict, ref_date: datetime.date) -> dict:
 def _first_evidence(blob: str):
     m = C.EVIDENCE_RX.search(blob)
     return m.group(0).lower() if m else None
+
+
+# --- numeric feature vector (for the LightGBM ranker) -----------------------
+FEATURE_NAMES = [
+    "role", "evidence", "musthave", "exp", "product", "location_s", "availability",
+    "rule_score", "evidence_hits", "musthave_hits", "nice_hits", "prod_hit",
+    "response_rate", "days_inactive_n", "notice_n", "open_to_work", "relocate",
+    "any_consulting", "consulting_only", "research_only", "other_domain_only",
+    "framework", "years", "in_india",
+]
+
+
+def vector(rec: dict) -> list[float]:
+    """Turn a feature record into a fixed numeric vector for the learned ranker."""
+    return [
+        rec["role"], rec["evidence"], rec["musthave"], rec["exp"], rec["product"],
+        rec["location_s"], rec["availability"], rec.get("rule_score", 0.0),
+        float(rec["evidence_hits"]), float(rec["musthave_hits"]), float(rec["nice_hits"]),
+        float(rec["prod_hit"]), rec["response_rate"], min(rec["days_inactive"], 365) / 365.0,
+        min(rec["notice"], 180) / 180.0, float(rec["open_to_work"]), float(rec["relocate"]),
+        float(rec["any_consulting"]), float(rec["consulting_only"]), float(rec["research_only"]),
+        float(rec["other_domain_only"]), float(rec["framework"]), rec["years"],
+        float((rec["country"] or "").lower() == "india"),
+    ]
