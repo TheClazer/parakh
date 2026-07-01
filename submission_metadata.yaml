@@ -1,0 +1,54 @@
+# Redrob Hackathon — Parakh submission metadata
+team_name: "TODO-team-name"
+
+primary_contact:
+  name: "Rayyan Ahmed Shaikh"
+  email: "therayyn16@gmail.com"
+  phone: "+91-XXXXXXXXXX"   # TODO
+
+team_members:
+  - name: "Rayyan Ahmed Shaikh"
+    email: "therayyn16@gmail.com"
+    role: "Team Lead / ML Engineer"
+
+github_repo: "https://github.com/TheClazer/parakh"   # TODO: create/publish
+sandbox_link: "https://huggingface.co/spaces/TheClazer/parakh-ranker"  # TODO
+reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submission.csv"
+
+compute:
+  platform: "Local Windows + Nebius (pre-compute only)"
+  cpu_cores: 8
+  ram_gb: 16
+  python_version: "3.x"
+  os: "Windows 11"
+  uses_gpu_for_inference: false       # ranking step is CPU-only
+  has_network_during_ranking: false   # ranking step is offline
+  pre_computation_required: true      # embeddings + LLM teacher labels (offline)
+  pre_computation_time_minutes: 0     # TODO fill after precompute lands
+
+ai_tools_used:
+  - "Claude"        # architecture, code, data audit (Claude Code / Opus)
+  # add "Nebius" hosted models used as an offline teacher once wired
+
+ai_usage_summary: |
+  Claude (Opus via Claude Code) used for the data audit, architecture, and code.
+  An open-weight LLM on Nebius is used OFFLINE as a labeling "teacher"; no hosted
+  LLM is called during the ranking step. No candidate PII is sent anywhere
+  (profiles are anonymized in the dataset).
+
+methodology_summary: |
+  Parakh ranks by *assaying* profiles, not matching keywords. An Integrity Gate
+  rejects honeypots (expert-skill-with-0-months; tenure exceeding career) and
+  keyword-stuffers (AI skills with no supporting career evidence). A transparent,
+  JD-derived rubric scores role fit, free-text evidence of building
+  retrieval/ranking/recommendation systems, must-have signals (embeddings, vector
+  DBs, ranking eval), experience band, product-vs-services, and location, then
+  modulates by behavioral availability. (Learned LightGBM ranker distilled from an
+  offline LLM teacher is layered on top; the ranking step stays CPU-only/offline.)
+
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: false   # TODO set true after local CPU timing check

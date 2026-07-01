@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+# large data — not committed
+dataset/
+candidates.jsonl
+*.jsonl
+# build artifacts / outputs
+artifacts/
+*.xlsx
+submission*.csv
+!sample_submission.csv
+.DS_Store

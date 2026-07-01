@@ -1,0 +1,5 @@
+# Runtime deps for the offline ranking step (rank.py).
+# Kept minimal so Stage-3 reproduction is trivial and fast on CPU.
+openpyxl>=3.1          # XLSX output for the portal
+# lightgbm>=4.3        # (added when the learned ranker lands)
+# numpy>=1.26          # (added with embeddings/model)
