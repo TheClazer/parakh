@@ -10,6 +10,7 @@ dataset/
 candidates.jsonl
 *.jsonl
 !artifacts/teacher_labels.jsonl
+!artifacts/teacher2_labels.jsonl
 # large binaries (embeddings/model weights) — shipped via script/HF, not git
 *.npy
 *.npz

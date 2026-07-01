@@ -31,14 +31,33 @@ REF_DATE = datetime.date(2026, 6, 30)
 TOP_N = 100
 
 
-def load_and_score(path, labels=None):
-    """Score every candidate. When an offline teacher label exists, the teacher
-    tier (0-5) is the dominant signal and the rule score orders within a tier:
-        blended = (tier + min(rule, 0.999)) / 6      -> in [0, 1]
+def _load_labels(path):
+    d = {}
+    if path and Path(path).exists():
+        for line in open(path, encoding="utf-8"):
+            try:
+                r = json.loads(line)
+                d[r["candidate_id"]] = r
+            except (json.JSONDecodeError, KeyError):
+                pass
+        print(f"[parakh] loaded {len(d)} labels from {path}", file=sys.stderr)
+    return d
+
+
+def _tier_of(lab):
+    return lab["tier"] if lab and lab.get("tier") is not None else None
+
+
+def load_and_score(path, labels=None, labels2=None):
+    """Score every candidate. Teacher judgment dominates; the rule score orders
+    within a tier. When TWO independent teachers graded a candidate we use their
+    AVERAGE tier (cross-model agreement rises to the very top):
+        blended = (avg_tier + min(rule, 0.999)) / 6      -> in [0, 1]
     Unlabeled candidates (e.g. a fresh sandbox sample) fall back to the rule
     score alone, mapped into the tier-0 band so they never outrank a graded fit.
     """
     labels = labels or {}
+    labels2 = labels2 or {}
     recs = []
     n = honeypots = stuffers = teacher_used = 0
     t0 = time.time()
@@ -55,14 +74,19 @@ def load_and_score(path, labels=None):
             rec = features.extract(cand, REF_DATE)
             rule = score.score(rec)
             rec["rule_score"] = rule
-            lab = labels.get(rec["candidate_id"])
-            if lab and lab.get("tier") is not None and not rec["honeypot"]:
-                rec["tier"] = lab["tier"]
-                rec["teacher_reason"] = (lab.get("reason") or "").strip()
-                rec["score"] = (lab["tier"] + min(rule, 0.999)) / 6.0
+            lab, lab2 = labels.get(rec["candidate_id"]), labels2.get(rec["candidate_id"])
+            tiers = [t for t in (_tier_of(lab), _tier_of(lab2)) if t is not None]
+            if tiers and not rec["honeypot"]:
+                avg_tier = sum(tiers) / len(tiers)
+                rec["tier"] = avg_tier
+                rec["n_judges"] = len(tiers)
+                rec["teacher_reason"] = ((lab and lab.get("reason"))
+                                         or (lab2 and lab2.get("reason")) or "").strip()
+                rec["score"] = (avg_tier + min(rule, 0.999)) / 6.0
                 teacher_used += 1
             else:
                 rec["tier"] = None
+                rec["n_judges"] = 0
                 rec["teacher_reason"] = None
                 rec["score"] = min(rule, 0.999) / 6.0
             honeypots += rec["honeypot"]
@@ -118,31 +142,24 @@ def main():
     ap.add_argument("--out", default="submission.csv", help="output CSV path")
     ap.add_argument("--xlsx", default=None, help="optional XLSX output path")
     ap.add_argument("--labels", default="artifacts/teacher_labels.jsonl",
-                    help="offline teacher labels (skipped if missing)")
+                    help="primary offline teacher labels (skipped if missing)")
+    ap.add_argument("--labels2", default="artifacts/teacher2_labels.jsonl",
+                    help="second-teacher labels for the top set (skipped if missing)")
     args = ap.parse_args()
 
     if not Path(args.candidates).exists():
         sys.exit(f"[parakh] candidates file not found: {args.candidates}")
 
-    labels = {}
-    if args.labels and Path(args.labels).exists():
-        for line in open(args.labels, encoding="utf-8"):
-            try:
-                d = json.loads(line)
-                labels[d["candidate_id"]] = d
-            except (json.JSONDecodeError, KeyError):
-                pass
-        print(f"[parakh] loaded {len(labels)} teacher labels from {args.labels}",
-              file=sys.stderr)
-
-    recs = load_and_score(args.candidates, labels)
+    labels = _load_labels(args.labels)
+    labels2 = _load_labels(args.labels2)
+    recs = load_and_score(args.candidates, labels, labels2)
     top = rank(recs)
 
     # quick top-10 preview for a human sanity check
     print("[parakh] top 10 preview:", file=sys.stderr)
     for i, r in enumerate(top[:10], start=1):
         tier = r.get("tier")
-        tier_s = f"T{tier}" if tier is not None else "T-"
+        tier_s = f"T{tier:g}x{r.get('n_judges', 0)}" if tier is not None else "T-"
         print(f"  {i:2d}. {r['candidate_id']} {r['score']:.4f} {tier_s} "
               f"{r['current_title']} ({r['years']}y) {r['location']}", file=sys.stderr)
 

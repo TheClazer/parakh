@@ -31,9 +31,12 @@ from parakh import features
 from parakh.nebius import client
 from precompute import grade
 
-EVAL_MODEL = "deepseek-ai/DeepSeek-V4-Pro"
-CACHE = Path("artifacts/eval_labels.jsonl")
 _lock = threading.Lock()
+
+
+def cache_path(model):
+    short = model.split("/")[-1].replace(".", "_")
+    return Path(f"artifacts/eval_labels_{short}.jsonl")
 
 
 def read_top(csv_path, k):
@@ -57,10 +60,10 @@ def load_profiles(path, ids):
     return found
 
 
-def load_cache():
+def load_cache(path):
     d = {}
-    if CACHE.exists():
-        for line in CACHE.open(encoding="utf-8"):
+    if path.exists():
+        for line in path.open(encoding="utf-8"):
             try:
                 r = json.loads(line)
                 d[r["candidate_id"]] = r["tier"]
@@ -69,14 +72,14 @@ def load_cache():
     return d
 
 
-def grade_missing(profiles, cache, workers=16):
+def grade_missing(profiles, cache, model, path, workers=16):
     todo = [c for cid, c in profiles.items() if cid not in cache]
     if not todo:
         return
     cl = client()
-    CACHE.parent.mkdir(exist_ok=True)
-    with CACHE.open("a", encoding="utf-8") as f, ThreadPoolExecutor(workers) as ex:
-        futs = {ex.submit(grade, cl, c, EVAL_MODEL): c for c in todo}
+    path.parent.mkdir(exist_ok=True)
+    with path.open("a", encoding="utf-8") as f, ThreadPoolExecutor(workers) as ex:
+        futs = {ex.submit(grade, cl, c, model): c for c in todo}
         for fut in as_completed(futs):
             c = futs[fut]
             tier, _ = fut.result()
@@ -85,7 +88,7 @@ def grade_missing(profiles, cache, workers=16):
             cache[c["candidate_id"]] = tier
             with _lock:
                 f.write(json.dumps({"candidate_id": c["candidate_id"], "tier": tier}) + "\n")
-    print(f"[eval] graded {len(todo)} new (model={EVAL_MODEL})", file=sys.stderr)
+    print(f"[eval] graded {len(todo)} new (model={model})", file=sys.stderr)
 
 
 def ndcg(tiers, k):
@@ -112,26 +115,25 @@ def evaluate(csv_path, ids, cache):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--csv", required=True)
-    ap.add_argument("--csv2", default=None, help="optional second ranking to compare")
+    ap.add_argument("--csvs", nargs="+", required=True, help="one or more ranking CSVs")
     ap.add_argument("--candidates", default=C.DEFAULT_CANDIDATES)
     ap.add_argument("--k", type=int, default=60, help="how many top rows to judge")
+    ap.add_argument("--model", default="meta-llama/Llama-3.3-70B-Instruct",
+                    help="independent judge (use a model NOT used in the ranking)")
     args = ap.parse_args()
 
-    ids1 = read_top(args.csv, args.k)
-    ids2 = read_top(args.csv2, args.k) if args.csv2 else []
-    all_ids = list(dict.fromkeys(ids1 + ids2))
+    per_csv_ids = {c: read_top(c, args.k) for c in args.csvs}
+    all_ids = list(dict.fromkeys(i for ids in per_csv_ids.values() for i in ids))
 
     profiles = load_profiles(args.candidates, all_ids)
-    cache = load_cache()
-    grade_missing(profiles, cache)
+    path = cache_path(args.model)
+    cache = load_cache(path)
+    grade_missing(profiles, cache, args.model, path)
 
-    print(f"\n=== {args.csv} ===")
-    for k, v in evaluate(args.csv, ids1, cache).items():
-        print(f"  {k:12s} {v}")
-    if args.csv2:
-        print(f"\n=== {args.csv2} ===")
-        for k, v in evaluate(args.csv2, ids2, cache).items():
+    print(f"\n[judge = {args.model}]")
+    for c in args.csvs:
+        print(f"\n=== {c} ===")
+        for k, v in evaluate(c, per_csv_ids[c], cache).items():
             print(f"  {k:12s} {v}")
 
 
