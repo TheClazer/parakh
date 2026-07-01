@@ -1,5 +1,5 @@
 # Redrob Hackathon — Parakh submission metadata
-team_name: "TODO-team-name"
+team_name: "Evolve"
 
 primary_contact:
   name: "Rayyan Ahmed Shaikh"
@@ -9,7 +9,11 @@ primary_contact:
 team_members:
   - name: "Rayyan Ahmed Shaikh"
     email: "therayyn16@gmail.com"
-    role: "Team Lead / ML Engineer"
+    role: "Team Lead"
+  - name: "Inchara"
+    email: "pinchara01@gmail.com"
+  - name: "Harshita Nagesh"
+    email: "harshitanagesh4@gmail.com"
 
 github_repo: "https://github.com/TheClazer/parakh"   # TODO: create/publish
 sandbox_link: "https://huggingface.co/spaces/TheClazer/parakh-ranker"  # TODO

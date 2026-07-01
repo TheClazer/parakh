@@ -1,0 +1,4 @@
+[precompute] scanned 100000 in 188s; shortlisted 3000
+[precompute] 0 cached, 3000 to grade (model=deepseek-ai/DeepSeek-V4-Pro, workers=24)
+[precompute] 100/3000  2.5/s  ETA 19.6m  tiers={1: 3, 2: 41, 3: 3, 4: 28, 5: 25}
+[precompute] 200/3000  2.7/s  ETA 17.4m  tiers={1: 8, 2: 86, 3: 10, 4: 61, 5: 35}

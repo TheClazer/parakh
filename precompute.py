@@ -142,10 +142,10 @@ def shortlist(path, n):
     return [c for _, _, c in sorted(heap, key=lambda x: -x[0])]
 
 
-def load_done():
+def load_done(path):
     done = {}
-    if OUT_PATH.exists():
-        for line in OUT_PATH.open(encoding="utf-8"):
+    if path.exists():
+        for line in path.open(encoding="utf-8"):
             try:
                 d = json.loads(line)
                 done[d["candidate_id"]] = d
@@ -160,17 +160,20 @@ def main():
     ap.add_argument("--shortlist", type=int, default=3000)
     ap.add_argument("--workers", type=int, default=24)
     ap.add_argument("--limit", type=int, default=0, help="grade only first N (testing)")
+    ap.add_argument("--model", default=TEACHER_MODEL, help="teacher model id")
+    ap.add_argument("--out", default=str(OUT_PATH), help="labels output path")
     args = ap.parse_args()
 
-    OUT_PATH.parent.mkdir(exist_ok=True)
+    out_path = Path(args.out)
+    out_path.parent.mkdir(exist_ok=True)
     cands = shortlist(args.candidates, args.shortlist)
     if args.limit:
         cands = cands[:args.limit]
 
-    done = load_done()
+    done = load_done(out_path)
     todo = [c for c in cands if c["candidate_id"] not in done]
     print(f"[precompute] {len(done)} cached, {len(todo)} to grade "
-          f"(model={TEACHER_MODEL}, workers={args.workers})", file=sys.stderr)
+          f"(model={args.model}, workers={args.workers})", file=sys.stderr)
     if not todo:
         return
 
@@ -178,9 +181,9 @@ def main():
     t0 = time.time()
     n_done = 0
     tier_hist = {}
-    with OUT_PATH.open("a", encoding="utf-8") as fout, \
+    with out_path.open("a", encoding="utf-8") as fout, \
             ThreadPoolExecutor(max_workers=args.workers) as ex:
-        futs = {ex.submit(grade, cl, c): c for c in todo}
+        futs = {ex.submit(grade, cl, c, args.model): c for c in todo}
         for fut in as_completed(futs):
             c = futs[fut]
             tier, reason = fut.result()
