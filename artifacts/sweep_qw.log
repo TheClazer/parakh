@@ -1,0 +1,10 @@
+[precompute] ids-file mode: 2500 candidates
+[precompute] 3000 cached, 2500 to grade (model=Qwen/Qwen3-235B-A22B-Instruct-2507, workers=20)
+[precompute] 100/2500  5.9/s  ETA 6.8m  tiers={0: 95, 1: 2, 2: 3}
+[precompute] 200/2500  7.1/s  ETA 5.4m  tiers={0: 195, 1: 2, 2: 3}
+[precompute] 300/2500  6.8/s  ETA 5.4m  tiers={0: 291, 1: 3, 2: 6}
+[precompute] 400/2500  6.9/s  ETA 5.1m  tiers={0: 388, 1: 4, 2: 7, 4: 1}
+[precompute] 500/2500  7.2/s  ETA 4.6m  tiers={0: 486, 1: 6, 2: 7, 4: 1}
+[precompute] 600/2500  7.4/s  ETA 4.3m  tiers={0: 583, 1: 9, 2: 7, 4: 1}
+[precompute] 700/2500  6.7/s  ETA 4.5m  tiers={0: 681, 1: 10, 2: 8, 4: 1}
+[precompute] 800/2500  6.6/s  ETA 4.3m  tiers={0: 780, 1: 10, 2: 9, 4: 1}

@@ -1,0 +1,2 @@
+[precompute] ids-file mode: 2500 candidates
+[precompute] 3000 cached, 2500 to grade (model=deepseek-ai/DeepSeek-V4-Pro, workers=20)

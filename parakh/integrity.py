@@ -70,6 +70,19 @@ def honeypot_flags(cand: dict) -> list[str]:
         if isinstance(sy, int) and isinstance(ey, int) and ey < sy:
             flags.append("edu_end_before_start")
 
+    # 4) platform-signal logic — active before they ever signed up is impossible
+    sig = cand.get("redrob_signals", {}) or {}
+    su, la = _date(sig.get("signup_date")), _date(sig.get("last_active_date"))
+    if su and la and la < su:
+        flags.append("active_before_signup")
+
+    # 5) the README's own example: "expert proficiency in 10 skills with 0 years used"
+    #    — generalized: implausibly many expert claims for a very short career
+    yoe_short = yoe < 3
+    n_expert = sum(1 for s in cand.get("skills", []) or [] if s.get("proficiency") == "expert")
+    if yoe_short and n_expert >= 8:
+        flags.append("expert_stack_vs_career_length")
+
     return flags
 
 

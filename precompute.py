@@ -162,11 +162,27 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="grade only first N (testing)")
     ap.add_argument("--model", default=TEACHER_MODEL, help="teacher model id")
     ap.add_argument("--out", default=str(OUT_PATH), help="labels output path")
+    ap.add_argument("--ids-file", default=None,
+                    help="grade exactly these candidate_ids (one per line) instead of the rule shortlist")
     args = ap.parse_args()
 
     out_path = Path(args.out)
     out_path.parent.mkdir(exist_ok=True)
-    cands = shortlist(args.candidates, args.shortlist)
+    if args.ids_file:
+        want = {l.strip() for l in open(args.ids_file, encoding="utf-8") if l.strip()}
+        cands = []
+        with open(args.candidates, encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                c = json.loads(line)
+                if c.get("candidate_id") in want:
+                    cands.append(c)
+                    if len(cands) == len(want):
+                        break
+        print(f"[precompute] ids-file mode: {len(cands)} candidates", file=sys.stderr)
+    else:
+        cands = shortlist(args.candidates, args.shortlist)
     if args.limit:
         cands = cands[:args.limit]
 

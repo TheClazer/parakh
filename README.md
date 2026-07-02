@@ -24,18 +24,33 @@ sort." A full audit of the 100k pool showed:
 ## How Parakh works
 
 1. **Integrity Gate** (`parakh/integrity.py`) — rejects impossible profiles
-   (honeypots) and keyword-stuffers (AI skills with **no supporting narrative**).
-2. **Transparent rubric** (`parakh/features.py`, `parakh/score.py`) — scores role
-   fit, *described* evidence of building retrieval/ranking/recommendation systems,
-   must-have signals (embeddings, vector DBs, ranking eval), experience band,
-   product-vs-services, and location; then modulates by **behavioral availability**
-   (the 23 Redrob signals) and applies the JD's explicit hard-negatives.
-3. **Grounded reasoning** — every row cites real facts and honest concerns; no
-   hallucinated skills or employers.
+   (honeypots: expert-skill-with-0-months, tenure exceeding the whole career,
+   active-before-signup, contradictory dates) and keyword-stuffers (AI skills
+   with **no supporting narrative**). Flagged profiles can never reach the top-100.
+2. **Transparent rubric** (`parakh/features.py`, `parakh/score.py`) — scores all
+   100k on role fit, *described* evidence of building retrieval/ranking/
+   recommendation systems, must-have signals (embeddings, vector DBs, ranking
+   eval), experience band, product-vs-services, and location; then modulates by
+   **behavioral availability** (the 23 Redrob signals) and the JD's explicit
+   hard-negatives.
+3. **Two independent teachers + recall rescue** (`precompute.py`, `sweep.py`) —
+   offline, **DeepSeek-V4** and **Qwen3-235B** (via Nebius) each grade ~5.5k
+   plausible candidates on a JD rubric (tier 0–5 + reason): the rule shortlist
+   **plus a full-pool sweep** that rescues plain-language gems the rules
+   under-rank — the exact trap the JD warns about.
+4. **Third-judge quorum on the contested top** (`regrade.py`) — **Kimi-K2.6**
+   re-grades the top of the ensemble; the final score averages the judges, so
+   only candidates that independent model families *agree* on reach the top-10.
+5. **Grounded, verified reasoning** (`reason_polish.py`) — every final row's
+   justification is regenerated against the profile JSON and **programmatically
+   checked for hallucinated skills/employers**, with tone matched to rank and
+   honest concerns stated.
+6. **Independent eval harness** (`eval.py`) — a third-party model
+   (Llama-3.3-70B, never used in ranking) scores every candidate ranking; each
+   architecture layer had to *prove* a top-10 gain to ship.
 
-> A learned LightGBM ranker distilled from an **offline** LLM teacher (Nebius) is
-> layered on top in later stages. The **ranking step below stays CPU-only and
-> offline** per `submission_spec` §3 — all LLM/GPU work happens in pre-compute.
+> All model calls happen in **pre-compute** and are cached as artifacts. The
+> **ranking step stays CPU-only, offline, ~3 min** per `submission_spec` §3.
 
 ## Reproduce
 

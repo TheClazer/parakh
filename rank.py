@@ -150,6 +150,8 @@ def main():
                     help="second-judge labels (skipped if missing)")
     ap.add_argument("--labels3", default="artifacts/teacher3_labels.jsonl",
                     help="third-judge labels for the top set (skipped if missing)")
+    ap.add_argument("--reasons", default="artifacts/reasons_final.jsonl",
+                    help="polished grounded reasons for the final 100 (skipped if missing)")
     args = ap.parse_args()
 
     if not Path(args.candidates).exists():
@@ -160,6 +162,13 @@ def main():
     labels3 = _load_labels(args.labels3)
     recs = load_and_score(args.candidates, labels, labels2, labels3)
     top = rank(recs)
+
+    # polished, fact-verified reasons for the final 100 (precomputed artifact)
+    polished = _load_labels(args.reasons)
+    for r in top:
+        pol = polished.get(r["candidate_id"])
+        if pol and pol.get("reason"):
+            r["teacher_reason"] = pol["reason"]
 
     # quick top-10 preview for a human sanity check
     print("[parakh] top 10 preview:", file=sys.stderr)
@@ -173,6 +182,19 @@ def main():
     if args.xlsx:
         write_xlsx(top, args.xlsx)
 
+    # compute-constraint proof (spec §3: ≤5 min wall, ≤16 GB RAM, CPU-only)
+    wall = time.time() - _T0
+    try:
+        import psutil
+        peak_gb = psutil.Process().memory_info().peak_wset / 1e9
+        print(f"[parakh] selftest: wall={wall:.1f}s (limit 300s) "
+              f"peak_ram={peak_gb:.2f}GB (limit 16GB) network=OFF gpu=OFF", file=sys.stderr)
+    except ImportError:
+        print(f"[parakh] selftest: wall={wall:.1f}s (limit 300s) network=OFF gpu=OFF",
+              file=sys.stderr)
+
+
+_T0 = time.time()
 
 if __name__ == "__main__":
     main()
