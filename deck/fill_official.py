@@ -104,7 +104,7 @@ fill_field(S[0], 57, "Rayyan Ahmed Shaikh")
 fill_field(S[0], 56, "Track 1 - The Data & AI Challenge: Intelligent Candidate Discovery & Ranking", sz=13)
 add_text(S[0], 0.34, 4.85, 9.3, 0.5,
          [{"runs": [("PARAKH", 15, PUR, True),
-                    ("  (परख - to assay; to test whether gold is genuine)  ·  Rayyan Ahmed Shaikh · Inchara · Harshita Nagesh", 12, INK, False)]}])
+                    ("  (परख - to assay; to test whether gold is genuine)  ·  Rayyan Ahmed Shaikh · Inchara P · Harshita Nagesh", 12, INK, False)]}])
 
 # ================= S2 - Solution Overview =================
 set_qa(S[1], 64, [

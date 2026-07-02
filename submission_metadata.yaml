@@ -4,16 +4,19 @@ team_name: "Evolve"
 primary_contact:
   name: "Rayyan Ahmed Shaikh"
   email: "therayyn16@gmail.com"
-  phone: "+91-XXXXXXXXXX"   # TODO
+  phone: "+91-9916846672"
 
 team_members:
   - name: "Rayyan Ahmed Shaikh"
     email: "therayyn16@gmail.com"
+    phone: "+91-9916846672"
     role: "Team Lead"
-  - name: "Inchara"
+  - name: "Inchara P"
     email: "pinchara01@gmail.com"
+    phone: "+91-7337743545"
   - name: "Harshita Nagesh"
     email: "harshitanagesh4@gmail.com"
+    phone: "+91-8904117768"
 
 github_repo: "https://github.com/TheClazer/parakh"   # TODO: create/publish
 sandbox_link: "https://huggingface.co/spaces/TheClazer/parakh-ranker"  # TODO
@@ -23,7 +26,7 @@ compute:
   platform: "Local Windows + Nebius (pre-compute only)"
   cpu_cores: 8
   ram_gb: 16
-  python_version: "3.x"
+  python_version: "3.11"
   os: "Windows 11"
   uses_gpu_for_inference: false       # ranking step is CPU-only
   has_network_during_ranking: false   # ranking step is offline
