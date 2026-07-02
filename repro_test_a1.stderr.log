@@ -1,0 +1,18 @@
+[parakh] loaded 5500 labels from artifacts/teacher_ds.jsonl
+[parakh] loaded 5500 labels from artifacts/teacher_labels.jsonl
+[parakh] loaded 100 labels from artifacts/teacher3_labels.jsonl
+[parakh] scored 100000 in 173.7s (42 honeypots, 0 stuffers, 5500 teacher-graded)
+[parakh] loaded 95 labels from artifacts/reasons_final.jsonl
+[parakh] top 10 preview:
+   1. CAND_0050454 0.9954 T5x3 AI Engineer (6.8y) Delhi, Delhi
+   2. CAND_0081846 0.9942 T5x3 Lead AI Engineer (6.7y) Jaipur, Rajasthan
+   3. CAND_0027691 0.9927 T5x3 NLP Engineer (6.5y) Pune, Maharashtra
+   4. CAND_0077337 0.9927 T5x3 Staff Machine Learning Engineer (7.0y) Kochi, Kerala
+   5. CAND_0018499 0.9897 T5x3 Senior Machine Learning Engineer (7.2y) Noida, Uttar Pradesh
+   6. CAND_0039754 0.9881 T5x3 Senior Applied Scientist (16.2y) Indore, Madhya Pradesh
+   7. CAND_0060054 0.9880 T5x3 AI Engineer (6.4y) Jaipur, Rajasthan
+   8. CAND_0000031 0.9873 T5x3 Recommendation Systems Engineer (6.0y) Hyderabad, Telangana
+   9. CAND_0017960 0.9863 T5x3 Recommendation Systems Engineer (7.7y) Bangalore, Karnataka
+  10. CAND_0062247 0.9861 T5x3 AI Engineer (7.3y) Kochi, Kerala
+[parakh] wrote repro_test_a1.csv
+[parakh] selftest: wall=174.0s (limit 300s) peak_ram=0.19GB (limit 16GB) network=OFF gpu=OFF
