@@ -151,10 +151,10 @@ def main():
                     help="path to candidates.jsonl")
     ap.add_argument("--out", default="submission.csv", help="output CSV path")
     ap.add_argument("--xlsx", default=None, help="optional XLSX output path")
-    ap.add_argument("--labels", default="artifacts/teacher_labels.jsonl",
-                    help="primary offline teacher labels (skipped if missing)")
-    ap.add_argument("--labels2", default="artifacts/teacher2_labels.jsonl",
-                    help="second-judge labels (skipped if missing)")
+    ap.add_argument("--labels", default="artifacts/teacher_ds.jsonl",
+                    help="teacher 1 labels: DeepSeek-V4 (skipped if missing)")
+    ap.add_argument("--labels2", default="artifacts/teacher_labels.jsonl",
+                    help="teacher 2 labels: Qwen3-235B (skipped if missing)")
     ap.add_argument("--labels3", default="artifacts/teacher3_labels.jsonl",
                     help="third-judge labels for the top set (skipped if missing)")
     ap.add_argument("--reasons", default="artifacts/reasons_final.jsonl",

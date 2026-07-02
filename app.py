@@ -11,14 +11,15 @@ import gradio as gr
 from rank import load_and_score, rank as rank_top, _load_labels
 from parakh import score as scoremod
 
-LABELS = _load_labels("artifacts/teacher_labels.jsonl")
-LABELS2 = _load_labels("artifacts/teacher2_labels.jsonl")
+LABELS = _load_labels("artifacts/teacher_ds.jsonl")
+LABELS2 = _load_labels("artifacts/teacher_labels.jsonl")
+LABELS3 = _load_labels("artifacts/teacher3_labels.jsonl")
 
 
 def rank_upload(fileobj):
     if fileobj is None:
         return None, [["—", "upload a .jsonl of candidates (≤100)", "", ""]]
-    recs = load_and_score(fileobj.name, LABELS, LABELS2)
+    recs = load_and_score(fileobj.name, LABELS, LABELS2, LABELS3)
     top = rank_top(recs)
     out = "parakh_ranked.csv"
     with open(out, "w", encoding="utf-8", newline="") as f:
@@ -33,7 +34,7 @@ def rank_upload(fileobj):
     return out, preview
 
 
-with gr.Blocks(title="Parakh — trap-aware candidate ranker", theme=gr.themes.Soft()) as demo:
+with gr.Blocks(title="Parakh — trap-aware candidate ranker") as demo:
     gr.Markdown(
         "# Parakh — trap-aware candidate ranker\n"
         "Assay, don't match. Upload a small `candidates.jsonl` (≤100 profiles); "
