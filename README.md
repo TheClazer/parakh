@@ -47,6 +47,30 @@ We audited all 100,000 profiles before writing the ranker. The dataset is engine
 
 Two planes. All intelligence is pre-computed once, offline; the submitted ranking step reads cached artifacts and runs in minutes on a laptop CPU with no network - exactly as the challenge's compute constraints require ("plan for a small ranker over precomputed features").
 
+```mermaid
+flowchart TB
+    subgraph PRE["PRE-COMPUTE - offline, runs once, network allowed"]
+        direction LR
+        A["candidates.jsonl<br/>100,000 profiles"] --> B["Rule shortlist top-3,000<br/>+ recall sweep 2,500"]
+        B --> C["DeepSeek-V4 teacher<br/>grades 5,500"]
+        B --> D["Qwen3-235B teacher<br/>grades 5,500"]
+        C --> E["GLM-5.2 third judge<br/>re-grades top-100"]
+        D --> E
+        E --> F[("artifacts/*.jsonl<br/>cached tiers + verified reasons")]
+    end
+
+    subgraph RANK["RANKING STEP - rank.py - CPU only, no network, under 5 min"]
+        direction LR
+        G["candidates.jsonl"] --> H["Integrity Gate<br/>honeypots + stuffers to floor"]
+        H --> I["JD rubric scores<br/>all 100,000"]
+        I --> J["Blend: mean judge tier<br/>+ rule tiebreak"]
+        J --> K["Top-100 + verified reasons<br/>submission.csv / .xlsx"]
+    end
+
+    F -.->|"read at runtime"| J
+    L["Llama-3.3-70B<br/>independent eval - never ranks"] -.->|"gates every upgrade"| PRE
+```
+
 ### Ranking step (`rank.py` - the submitted artifact)
 
 1. **Integrity Gate** (`parakh/integrity.py`) - rejects impossible profiles (expert-skill-with-0-months, tenure exceeding the career, contradictory dates) and keyword-stuffers (AI skill lists with no supporting career narrative). Flagged profiles can never reach the top-100. We also document a check we deliberately rejected - last-active-before-signup fires on 7,496 profiles of generator noise. Precision over recall: a false honeypot flag buries a real candidate.
