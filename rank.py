@@ -48,9 +48,9 @@ def _tier_of(lab):
     return lab["tier"] if lab and lab.get("tier") is not None else None
 
 
-def load_and_score(path, labels=None, labels2=None):
+def load_and_score(path, labels=None, labels2=None, labels3=None):
     """Score every candidate. Teacher judgment dominates; the rule score orders
-    within a tier. When TWO independent teachers graded a candidate we use their
+    within a tier. When several INDEPENDENT judges graded a candidate we use their
     AVERAGE tier (cross-model agreement rises to the very top):
         blended = (avg_tier + min(rule, 0.999)) / 6      -> in [0, 1]
     Unlabeled candidates (e.g. a fresh sandbox sample) fall back to the rule
@@ -58,6 +58,7 @@ def load_and_score(path, labels=None, labels2=None):
     """
     labels = labels or {}
     labels2 = labels2 or {}
+    labels3 = labels3 or {}
     recs = []
     n = honeypots = stuffers = teacher_used = 0
     t0 = time.time()
@@ -74,14 +75,16 @@ def load_and_score(path, labels=None, labels2=None):
             rec = features.extract(cand, REF_DATE)
             rule = score.score(rec)
             rec["rule_score"] = rule
-            lab, lab2 = labels.get(rec["candidate_id"]), labels2.get(rec["candidate_id"])
-            tiers = [t for t in (_tier_of(lab), _tier_of(lab2)) if t is not None]
+            cid = rec["candidate_id"]
+            lab, lab2, lab3 = labels.get(cid), labels2.get(cid), labels3.get(cid)
+            tiers = [t for t in (_tier_of(lab), _tier_of(lab2), _tier_of(lab3)) if t is not None]
             if tiers and not rec["honeypot"]:
                 avg_tier = sum(tiers) / len(tiers)
                 rec["tier"] = avg_tier
                 rec["n_judges"] = len(tiers)
                 rec["teacher_reason"] = ((lab and lab.get("reason"))
-                                         or (lab2 and lab2.get("reason")) or "").strip()
+                                         or (lab2 and lab2.get("reason"))
+                                         or (lab3 and lab3.get("reason")) or "").strip()
                 rec["score"] = (avg_tier + min(rule, 0.999)) / 6.0
                 teacher_used += 1
             else:
@@ -144,7 +147,9 @@ def main():
     ap.add_argument("--labels", default="artifacts/teacher_labels.jsonl",
                     help="primary offline teacher labels (skipped if missing)")
     ap.add_argument("--labels2", default="artifacts/teacher2_labels.jsonl",
-                    help="second-teacher labels for the top set (skipped if missing)")
+                    help="second-judge labels (skipped if missing)")
+    ap.add_argument("--labels3", default="artifacts/teacher3_labels.jsonl",
+                    help="third-judge labels for the top set (skipped if missing)")
     args = ap.parse_args()
 
     if not Path(args.candidates).exists():
@@ -152,7 +157,8 @@ def main():
 
     labels = _load_labels(args.labels)
     labels2 = _load_labels(args.labels2)
-    recs = load_and_score(args.candidates, labels, labels2)
+    labels3 = _load_labels(args.labels3)
+    recs = load_and_score(args.candidates, labels, labels2, labels3)
     top = rank(recs)
 
     # quick top-10 preview for a human sanity check

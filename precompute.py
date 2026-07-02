@@ -98,7 +98,7 @@ def grade(cl, cand, model=TEACHER_MODEL):
     for attempt in range(4):
         try:
             r = cl.chat.completions.create(
-                model=model, temperature=0, max_tokens=200,
+                model=model, temperature=0, max_tokens=700,
                 messages=[{"role": "system", "content": SYS_PROMPT},
                           {"role": "user", "content": txt}])
             raw = r.choices[0].message.content.strip()
