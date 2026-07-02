@@ -135,60 +135,27 @@ text(s, 0.95, 6.2, 11, 0.7,
      [{"runs": [("Team Evolve", 16, PAPER, True)]},
       {"before": 2, "runs": [(CREDITS, 13.5, MIST)]}])
 
-# ============================================================ 2 — PROBLEM
+# ============================================================ 2 — OUR READ OF THE TERRAIN
+# (Evaluators wrote the problem — one slide of diagnostic insight, then straight to the solution.)
 s = slide(PAPER)
-kicker(s, 0.7, 0.6, "The problem")
-text(s, 0.7, 1.05, 7.4, 1.4, [{"runs": [("Great candidates are missed —", 34, INK, True, False, HEAD)]},
-                              {"runs": [("not absent, just unseen.", 34, INK, True, False, HEAD)]}])
-text(s, 0.7, 2.9, 6.7, 2.6,
-     [{"line": 1.15, "after": 10, "runs": [("Recruiters scan hundreds of profiles and still miss the right person — because ", 16, SLATE), ("keyword filters can't see fit.", 16, INK, True)]},
-      {"line": 1.15, "after": 10, "runs": [("They reward whoever lists the most buzzwords, and overlook the engineer who ", 16, SLATE), ("built the exact system", 16, INK, True), (" but described it plainly.", 16, SLATE)]},
-      {"line": 1.15, "runs": [("In a pool of 100,000 the real fits are a needle in a haystack — and half the score rides on the top ten.", 16, SLATE)]}])
-sx = 8.15
-for i, (num, lab, col) in enumerate([("100,000", "profiles in the pool", INK),
-                                     ("~ few hundred", "genuinely fit the role", BRASS_D),
-                                     ("Top 10", "carry 50% of the score", TEAL)]):
-    yy = 1.15 + i * 1.72
-    card(s, sx, yy, 4.45, 1.5, PANEL)
-    text(s, sx + 0.35, yy + 0.18, 3.9, 0.85, [{"runs": [(num, 38, col, True, False, HEAD)]}], anchor=MSO_ANCHOR.MIDDLE)
-    text(s, sx + 0.37, yy + 1.0, 3.9, 0.4, [{"runs": [(lab, 14, SLATE)]}])
-
-# ============================================================ 3 — TRAPS
-s = slide(PAPER)
-kicker(s, 0.7, 0.6, "Why naïve matching loses")
-title(s, 1.05, "The dataset is engineered to punish keyword search")
-traps = [("Keyword stuffers", CLAY, CLAY_LT, "Lists every AI skill; the actual job is Marketing or Ops. Counting keywords ranks the fake at the top."),
-         ("Plain-language gems", TEAL, TEAL_LT, "7,334 people describe real retrieval / ranking work under a non-ML title. Title filters miss them entirely."),
-         ("Behavioural twins", BRASS_D, BRASS_LT, "Near-identical on paper; they differ only in engagement signals — who actually responds and shows up."),
-         ("Honeypots (~80)", CLAY, CLAY_LT, "Impossible profiles (expert skills, 0 months' use). Rank >10% of them in the top 100 and you're disqualified.")]
-gw, gh = 5.83, 2.15
+kicker(s, 0.7, 0.6, "Our read of the terrain")
+title(s, 1.05, "We audited all 100,000 profiles before building", 32)
+traps = [("Keyword stuffers", CLAY, CLAY_LT, "Every AI skill listed; the actual job is Marketing or Ops. Keyword counting ranks the fake #1."),
+         ("Plain-language gems", TEAL, TEAL_LT, "7,334 people describe real retrieval / ranking work under a non-ML title. Title filters miss all of them."),
+         ("Behavioural twins", BRASS_D, BRASS_LT, "Near-identical on paper — separable only by engagement signals: who actually responds and shows up."),
+         ("Honeypots — found analytically", CLAY, CLAY_LT, "The planted impossible profiles have a signature: 'expert' skills used 0 months, tenure longer than the career. We detect them outright.")]
+gw, gh = 5.83, 1.92
 for i, (t, ac, tint, desc) in enumerate(traps):
-    x = 0.7 + (i % 2) * (gw + 0.24); y = 2.1 + (i // 2) * (gh + 0.24)
+    x = 0.7 + (i % 2) * (gw + 0.24); y = 2.05 + (i // 2) * (gh + 0.22)
     card(s, x, y, gw, gh, tint)
-    hallmark(s, x + 0.5, y + 0.55, 0.34, ac)
-    text(s, x + 0.95, y + 0.32, gw - 1.2, 0.5, [{"runs": [(t, 20, INK, True, False, HEAD)]}])
-    text(s, x + 0.5, y + 1.05, gw - 0.9, 1.0, [{"line": 1.12, "runs": [(desc, 14.5, SLATE)]}])
-
-# ============================================================ 4 — WHAT EVERYONE ELSE BUILDS
-s = slide(PAPER)
-kicker(s, 0.7, 0.6, "The trap everyone falls into", CLAY)
-title(s, 1.05, "What most teams will submit — and why it loses")
-card(s, 0.7, 2.1, 5.83, 3.35, PANEL)
-text(s, 1.05, 2.35, 5.2, 0.5, [{"runs": [("The obvious pipeline", 19, INK, True, False, HEAD)]}])
-for i, b in enumerate(["Embed the job description", "Embed all 100,000 profiles", "Cosine similarity → sort"]):
-    yy = 3.0 + i * 0.72
-    shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, 1.05, yy, 5.1, 0.58, fill=PAPER, line=MIST, lw=1.25, radius=0.14)
-    text(s, 1.25, yy, 4.8, 0.58, [{"runs": [(f"{i+1}.  ", 13, SLATE, True), (b, 13.5, INK)]}], anchor=MSO_ANCHOR.MIDDLE)
-card(s, 6.8, 2.1, 5.83, 3.35, CLAY_LT)
-text(s, 7.15, 2.35, 5.2, 0.5, [{"runs": [("What the traps do to it", 19, INK, True, False, HEAD)]}])
-for i, b in enumerate(["Keyword-stuffers rank #1 — buzzwords beat real work",
-                       "Plain-language gems get buried below them",
-                       "Impossible honeypots slip into the top 10",
-                       "→ honeypot rate breaks 10% → disqualified"]):
-    hl = i == 3
-    text(s, 7.15, 3.0 + i * 0.55, 5.2, 0.5,
-         [{"runs": [("·  ", 15, CLAY, True), (b, 14, CLAY if hl else INK_SOFT, hl)]}])
-text(s, 0.7, 5.75, 11.9, 0.5, [{"runs": [("The dataset was built to beat exactly this. So we don't play that game.", 15, INK, True, True)]}])
+    hallmark(s, x + 0.48, y + 0.5, 0.32, ac)
+    text(s, x + 0.9, y + 0.28, gw - 1.15, 0.5, [{"runs": [(t, 18.5, INK, True, False, HEAD)]}])
+    text(s, x + 0.48, y + 0.92, gw - 0.9, 0.95, [{"line": 1.1, "runs": [(desc, 13.5, SLATE)]}])
+card(s, 0.7, 6.35, 11.93, 0.78, INK)
+text(s, 1.05, 6.35, 11.3, 0.78,
+     [{"line": 1.05, "runs": [("Embed-everything-and-sort dies here: ", 14, BRASS, True),
+                              ("stuffers rank #1, gems get buried, honeypots trip the 10% disqualifier — and half the score rides on the top ten. So we built something else.", 14, PAPER)]}],
+     anchor=MSO_ANCHOR.MIDDLE)
 
 # ============================================================ 5 — THESIS
 s = slide(PAPER)
