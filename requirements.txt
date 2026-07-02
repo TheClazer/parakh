@@ -4,3 +4,4 @@ openpyxl>=3.1          # XLSX output for the portal
 gradio>=4.0            # ONLY for the HuggingFace Spaces sandbox (app.py)
 # rank.py itself needs no third-party deps beyond openpyxl — the offline
 # ranking step is pure-Python stdlib + precomputed JSONL artifacts.
+orjson>=3.9           # optional fast JSON parse for rank.py (falls back to stdlib)

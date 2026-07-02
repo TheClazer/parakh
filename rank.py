@@ -18,10 +18,17 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime
-import json
 import sys
 import time
 from pathlib import Path
+
+try:  # optional fast JSON parser — same behavior, ~2x faster on the 465MB pool
+    import orjson as _oj
+
+    class json:  # noqa: N801 - drop-in shim for the two calls we use
+        loads = staticmethod(_oj.loads)
+except ImportError:
+    import json
 
 from parakh import config as C
 from parakh import features, score

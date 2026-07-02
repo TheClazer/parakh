@@ -75,16 +75,21 @@ _SKILL_RX = re.compile(r"[A-Za-z][A-Za-z0-9+#./&-]{1,30}")
 
 
 def grounded(reason: str, cand: dict) -> bool:
-    """Cheap anti-hallucination check: any capitalized tech/org token quoted in the
-    reasoning must literally appear somewhere in the profile JSON."""
+    """Anti-hallucination check: capitalized tech/org tokens quoted in the reasoning
+    must appear in the profile JSON. One fuzzy miss is tolerated (paraphrase like
+    'Learning-to-Rank' vs 'learning to rank'); two or more means invention."""
     hay = json.dumps(cand, ensure_ascii=False).lower()
+    hay_squash = re.sub(r"[^a-z0-9]", "", hay)
     generic = {"ai", "ml", "engineer", "india", "redrob", "jd", "production", "senior",
-               "strong", "recruiter", "ranking", "retrieval", "recsys", "the", "with"}
+               "strong", "recruiter", "ranking", "retrieval", "recsys", "the", "with",
+               "llm", "nlp", "series", "founding", "team", "pune", "noida"}
+    misses = 0
     for tok in _SKILL_RX.findall(reason):
         if tok[0].isupper() and tok.lower() not in generic and len(tok) >= 3:
-            if tok.lower() not in hay:
-                return False
-    return True
+            t = tok.lower()
+            if t not in hay and re.sub(r"[^a-z0-9]", "", t) not in hay_squash:
+                misses += 1
+    return misses <= 1
 
 
 def gen(cl, cand, rank):

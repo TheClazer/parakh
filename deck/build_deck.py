@@ -216,7 +216,7 @@ text(s, 1.05, 2.1, 11.2, 1.15,
      [{"runs": [("The hard rule:  ", 15, BRASS, True), ("the ranking step must run offline, CPU-only, no LLM calls, under 5 minutes over 100,000 profiles. "
                  "An LLM call per candidate simply cannot fit — or scale in production.", 15, PAPER)]}],
      anchor=MSO_ANCHOR.MIDDLE)
-steps = [("Think — offline", "A frontier LLM (DeepSeek-V4) grades the plausible candidates on the job rubric. Slow, brilliant, unconstrained.", BRASS_D),
+steps = [("Think — offline", "Two frontier LLMs (DeepSeek-V4, Qwen-235B) grade every plausible candidate on the job rubric. Slow, brilliant, unconstrained.", BRASS_D),
          ("Bake — into artifacts", "Its verdicts are frozen into a small cached file that ships with the code — a precomputed feature.", INK_SOFT),
          ("Serve — in milliseconds", "The offline ranker reads those verdicts. No LLM, no GPU, no network at run-time.", TEAL)]
 for i, (t, d, c) in enumerate(steps):
@@ -243,7 +243,7 @@ def lane(y, label, sub, color, boxes):
         if i < len(boxes) - 1:
             arrow(s, x + bw - 0.02, y + 0.42, bgap + 0.04, 0.88, color)
 lane(2.15, "Pre-compute", "offline · LLM + GPU allowed", BRASS_D,
-     ["Embed + features", "DeepSeek-V4\ngrades fit 0–5", "Kimi-K2.6\n2nd judge"])
+     ["Sweep all 100k\n+ features", "DeepSeek-V4 + Qwen-235B\ngrade fit 0–5", "GLM-5.2\n3rd judge"])
 lane(4.15, "Ranking step", "offline · CPU · no network · < 5 min", TEAL,
      ["Integrity Gate", "Score all\n100,000", "Top 100\n+ reasons"])
 text(s, 0.7, 6.15, 11.93, 0.8,
@@ -315,16 +315,16 @@ text(s, 0.7, 5.65, 11.9, 0.5, [{"runs": [("Grades every plausible candidate 0–
 # ============================================================ 11 — QUORUM
 s = slide(PAPER)
 kicker(s, 0.7, 0.6, "Layer 3 — agreement, not one opinion")
-title(s, 1.05, "Two independent judges — the top is where they agree", 29)
+title(s, 1.05, "Three model families — the top is where they agree", 29)
 card(s, 0.7, 2.35, 3.5, 1.5, BRASS_LT)
-text(s, 1.0, 2.6, 2.9, 1.0, [{"runs": [("DeepSeek-V4", 18, INK, True, False, HEAD)]}, {"before": 3, "runs": [("primary teacher", 13, SLATE)]}])
+text(s, 1.0, 2.6, 2.9, 1.0, [{"runs": [("DeepSeek + Qwen", 17, INK, True, False, HEAD)]}, {"before": 3, "runs": [("two independent teachers", 13, SLATE)]}])
 card(s, 0.7, 4.05, 3.5, 1.5, TEAL_LT)
-text(s, 1.0, 4.3, 2.9, 1.0, [{"runs": [("Kimi-K2.6", 18, INK, True, False, HEAD)]}, {"before": 3, "runs": [("independent 2nd judge", 13, SLATE)]}])
+text(s, 1.0, 4.3, 2.9, 1.0, [{"runs": [("GLM-5.2", 18, INK, True, False, HEAD)]}, {"before": 3, "runs": [("3rd judge — contested top", 13, SLATE)]}])
 arrow(s, 4.35, 2.9, 0.9, 2.0, BRASS)
 arrow(s, 4.35, 3.9, 0.9, 2.0, BRASS)
 card(s, 5.35, 2.9, 3.3, 2.05, INK)
 text(s, 5.65, 3.2, 2.7, 1.6, [{"runs": [("Average the tiers", 17, PAPER, True, False, HEAD)]},
-                              {"before": 8, "line": 1.12, "runs": [("Only candidates ", 13.5, MIST), ("both", 13.5, BRASS, True), (" rate tier-5 rise to the very top.", 13.5, MIST)]}], anchor=MSO_ANCHOR.MIDDLE)
+                              {"before": 8, "line": 1.12, "runs": [("Only candidates ", 13.5, MIST), ("every model family", 13.5, BRASS, True), (" endorses rise to the very top.", 13.5, MIST)]}], anchor=MSO_ANCHOR.MIDDLE)
 card(s, 9.0, 2.9, 3.63, 2.05, PANEL)
 text(s, 9.3, 3.15, 3.1, 1.7, [{"runs": [("Why it pays off", 14, INK, True, False, HEAD)]},
                              {"before": 6, "line": 1.12, "runs": [("Different model families make different mistakes. Requiring agreement cancels each one's overconfidence.", 13, SLATE)]}], anchor=MSO_ANCHOR.MIDDLE)
@@ -357,8 +357,8 @@ title(s, 1.05, "We didn't fly blind")
 text(s, 0.7, 2.0, 11.9, 0.9,
      [{"line": 1.18, "runs": [("No public leaderboard and only three submissions — so most teams guess. We built our own eval harness and judged every version with a ", 15.5, SLATE),
                               ("third, independent model", 15.5, INK, True), (" that never touches the ranking.", 15.5, SLATE)]}])
-judges = [("DeepSeek-V4", "teacher — grades 3,000", BRASS_D),
-          ("Kimi-K2.6", "2nd judge — top 100", TEAL),
+judges = [("DeepSeek + Qwen", "two teachers — 5,500 graded each", BRASS_D),
+          ("GLM-5.2", "3rd judge — contested top", TEAL),
           ("Llama-3.3-70B", "independent scorer", INK_SOFT)]
 for i, (m, role, c) in enumerate(judges):
     x = 0.7 + i * 4.05
@@ -384,7 +384,7 @@ for i, (lab, val, col) in enumerate(bars):
 bl = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(1.0), Inches(base_y), Inches(8.4), Inches(0.018))
 bl.fill.solid(); bl.fill.fore_color.rgb = SLATE; bl.line.fill.background(); bl.shadow.inherit = False
 card(s, 9.7, 2.35, 2.95, 1.35, INK)
-text(s, 9.95, 2.55, 2.5, 1.0, [{"runs": [("10 / 10", 30, BRASS, True, False, HEAD)]}, {"runs": [("top-10 are tier-5 by both judges", 12.5, MIST)]}])
+text(s, 9.95, 2.55, 2.5, 1.0, [{"runs": [("10 / 10", 30, BRASS, True, False, HEAD)]}, {"runs": [("top-10 rated tier-5 by three model families", 12.5, MIST)]}])
 card(s, 9.7, 3.85, 2.95, 1.35, PANEL)
 text(s, 9.95, 4.05, 2.5, 1.0, [{"runs": [("0.98", 30, TEAL, True, False, HEAD)]}, {"runs": [("NDCG@50 (ensemble)", 12.5, SLATE)]}])
 text(s, 0.7, 6.55, 11.9, 0.6, [{"runs": [("Honest read: ", 12.5, INK, True), ("three different models agree the top-10 is excellent — a strong proxy, not the organisers' hidden ground truth.", 12.5, SLATE, False, True)]}])
